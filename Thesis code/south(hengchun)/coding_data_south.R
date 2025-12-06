@@ -7,9 +7,9 @@ library(lubridate)
 library(tidyverse)
 library(writexl)
 
-files <- list.files(path = "D:/成大/資源所/SPI+HWDI/data/south", pattern = "MaxAirTemperature.*\\.csv$", full.names = TRUE)
+files <- list.files(path = " ", pattern = "MaxAirTemperature.*\\.csv$", full.names = TRUE)
 
-# 自訂清理函數：處理一個檔案
+
 read_and_clean <- function(file_path) {
   file_name <- basename(file_path)
   year <- str_extract(file_name, "(?<=-)\\d{4}(?=-)")
@@ -36,16 +36,14 @@ read_and_clean <- function(file_path) {
 all_data_south <- map_dfr(files, read_and_clean) %>%
   arrange(date)
 print(head(all_data_south, 40))
-write_xlsx(all_data_south, "D:/成大/資源所/SPI+HWDI/data/south/all_data_south.xlsx")
+write_xlsx(all_data_south, "all_data_south.xlsx")
 ###############
-precip_raw <- read_csv("D:/成大/資源所/SPI+HWDI/data/south/467590-2025-Precipitation-month.csv", 
+precip_raw <- read_csv("data/south/467590-2025-Precipitation-month.csv", 
                        na = c("--", "x", "NA"))
 
 
-# 把第 1 欄改成 year，其餘為月份欄位
 colnames(precip_raw)[1] <- "year"
 
-# 寬轉長：每列代表一個月的降水量
 precip_long <- precip_raw %>%
   pivot_longer(
     cols = -year,
@@ -58,4 +56,4 @@ precip_long <- precip_raw %>%
     precipitation = as.numeric(precipitation)
   ) %>%
   arrange(year, month)
-write_xlsx(precip_long, "D:/成大/資源所/SPI+HWDI/data/south/rain_south.xlsx")
+write_xlsx(precip_long, "rain_south.xlsx")
