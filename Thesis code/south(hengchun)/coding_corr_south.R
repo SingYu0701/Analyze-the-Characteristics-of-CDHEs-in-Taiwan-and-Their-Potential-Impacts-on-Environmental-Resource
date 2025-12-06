@@ -4,8 +4,8 @@ library(ggplot2)
 library(writexl)
 library(reshape2)
 
-hwdi_south <- read_excel("D:/成大/資源所/SPI+HWDI/data/south/hwdi_south.xlsx")
-south_spi1 <- read_excel("D:/成大/資源所/SPI+HWDI/data/south/south_spi1_values.xlsx")
+hwdi_south <- read_excel("hwdi_south.xlsx")
+south_spi1 <- read_excel("south_spi1_values.xlsx")
 
 
 all_south <- south_spi1 %>%
@@ -28,12 +28,9 @@ d1<-hist(all_south$hwdi,main = "(d) Histogram of HWDI Hengchun" ,xlab = "HWDI",b
                                                                                    by = 1))
 abline(v = 1, col = "red", lwd = 2)
 
-#write_xlsx(all_south, path = "D:/成大/資源所/SPI+HWDI/data/south/all_south.xlsx")
+#write_xlsx(all_south, path = "all_south.xlsx")
 
-oni<-read.csv("D:/成大/資源所/SPI+HWDI/data/oni.csv")
-nino<-read.csv("D:/成大/資源所/SPI+HWDI/data/nino3.4.csv")
-wp <- read_excel("D:/成大/資源所/SPI+HWDI/data/wp.xlsx")
-#########################
+oni<-read.csv("oni.csv")
 
 df_all_south <- south_spi1 %>%
   inner_join(hwdi_south, by = c("year", "month")) %>%
@@ -52,7 +49,6 @@ df_all_south <- df_all_south %>%
     oni = as.numeric(oni)
   )
 
-# 2. 計算三變數間的Pearson相關係數矩陣
 cor_south <- cor(
   df_all_south[, c("spi", "hwdi", "oni")],
   method = "pearson",
@@ -60,10 +56,10 @@ cor_south <- cor(
 )
 print(cor_south)
 cor_melt <- melt(cor_south)
-# 🔹 把變數名稱轉為大寫（軸標就會是大寫）
+
 cor_melt$Var1 <- factor(toupper(cor_melt$Var1), levels = c("SPI", "HWDI", "ONI"))
 cor_melt$Var2 <- factor(toupper(cor_melt$Var2), levels = c("SPI", "HWDI", "ONI"))
-# 繪圖
+
 ggplot(cor_melt, aes(x = Var1, y = Var2, fill = value)) +
   geom_tile(color = "white") +
   scale_fill_gradient2(low = "green", 
@@ -77,8 +73,8 @@ ggplot(cor_melt, aes(x = Var1, y = Var2, fill = value)) +
         axis.text.y = element_text(size=18),
         plot.title = element_text(hjust = 0.5, face = "bold", size = 16)) +
   guides(fill = guide_colorbar(
-    barwidth = 1.2,    # 寬度
-    barheight = 10,    # 高度
+    barwidth = 1.2,  
+    barheight = 10,   
     title.position = "top",
     title.hjust = 0.5
   ))+
@@ -152,46 +148,4 @@ south_oni_spi_lag_df <- calc_lag_corr_plot(df_all_south$oni, df_all_south$spi, m
 
 south_spi_hwdi_lag_df <- calc_lag_corr_plot(df_all_south$spi, df_all_south$hwdi, max_lag = 6, title = "(f) SPI leads HWDI lag correlation of Hengchun", show_legend = FALSE)
 
-
-####
-
-extreme_south <- df_all_south %>%
-  filter(hwdi > 0, spi <= -1)
-
-# 篩選後計算 Spearman 相關係數（只針對極端事件）
-cor_extreme_south <- cor(
-  extreme_south[, c("spi", "hwdi", "oni")],
-  method = "spearman",
-  use = "complete.obs"
-)
-print(cor_extreme_south)
-cor_extreme_south <- melt(cor_extreme_south)
-# 繪圖
-ggplot(cor_extreme_south, aes(x = Var1, y = Var2, fill = value)) +
-  geom_tile(color = "white") +
-  scale_fill_gradient2(low = "blue", mid = "white", high = "red", 
-                       midpoint = 0, limit = c(-1, 1), space = "Lab",
-                       name = "Spearman\nCorrelation") +
-  geom_text(aes(label = round(value, 3)), color = "black", size = 5) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  labs(title = "Compound event correlation Heatmap (Hengchun)",
-       x = NULL, y = NULL)
-
-#write.csv(extreme_south, "D:/成大/資源所/SPI+HWDI/data/plot/extreme_south.csv", row.names = FALSE)
-##################
-# 4. 交叉相關函數 (CCF) 分析：找出 lag
-
-# ONI 與 HWDI
-ccf_result1<-ccf(df_all_south$oni, df_all_south$hwdi, lag.max =6, main = "ONI and HWDI of Hengchun")
-ccf_result1$lag[which.max(abs(ccf_result1$acf))]
-ccf_result1$acf[which.max(abs(ccf_result1$acf))]
-# ONI 與 SPI
-ccf_result2<-ccf(df_all_south$oni, df_all_south$spi, lag.max = 6, main = "ONI and SPI of Hengchun")
-ccf_result2$lag[which.max(abs(ccf_result2$acf))]
-ccf_result2$acf[which.max(abs(ccf_result2$acf))]
-# SPI 與 HWDI
-ccf_result3<-ccf(df_all_south$spi, df_all_south$hwdi, lag.max = 6, main = "SPI and HWDI of Hengchun")
-ccf_result3$lag[which.max(abs(ccf_result3$acf))]
-ccf_result3$acf[which.max(abs(ccf_result3$acf))]
 
