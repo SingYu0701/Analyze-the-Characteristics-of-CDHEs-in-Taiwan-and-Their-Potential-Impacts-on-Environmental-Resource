@@ -6,7 +6,7 @@ Keelung_energy<-c(677532110,675518803,684368708,672038252,715654529,715961875,
                   777578442)
 par(mgp = c(3.4, 0.5, 0), mar = c(5, 5, 4, 2))
 plot(year, Keelung_energy/10000,
-     type = "o",                     # 折線 + 點
+     type = "o",                    
      main = "(a) Annual Household Electricity Consumption in Keelung",
      xlab = "Year",
      ylab = "Electricity Consumption (x10000kWh)",
@@ -53,7 +53,7 @@ plot(year, Keelung_rice/100,
      type = "o",                       
      main = "(a) Annual Rice Production Value in Yilan",
      xlab = "Year",
-     ylab = "Production Value (×100,000 NT$)",  # 千元
+     ylab = "Production Value (×100,000 NT$)",  
      col = "blue",
      lwd = 2,
      pch = 16,
@@ -64,7 +64,7 @@ plot(year, Keelung_hot,
      type = "o",                       
      main = "(a) Annual Number of Heat-Related Illness Cases in Keelung",
      xlab = "Year",
-     ylab = "Number of Cases",  # 熱相關疾病人數
+     ylab = "Number of Cases", 
      col = "blue",
      lwd = 2,
      pch = 16,
@@ -78,7 +78,7 @@ Hengchun_energy<-c(1449614749,1464666126,1497589718,1543092213,
 )
 par(mgp = c(3.4, 0.5, 0), mar = c(5, 5, 4, 2))
 plot(year, Hengchun_energy/10000,
-     type = "o",                     # 折線 + 點
+     type = "o",                     
      main = "(b) Annual Household Electricity Consumption in Pingtung",
      xlab = "Year",
      ylab = "Electricity Consumption (x10000kWh)",
@@ -126,7 +126,7 @@ plot(year, Hengchun_rice/100,
      type = "o",                       
      main = "(b) Annual Rice Production Value in Pingtung",
      xlab = "Year",
-     ylab = "Production Value (×100,000 NT$)",  # 千元
+     ylab = "Production Value (×100,000 NT$)",  
      col = "blue",
      lwd = 2,
      pch = 16,
@@ -137,7 +137,7 @@ plot(year, Hengchun_hot,
      type = "o",                       
      main = "(b) Annual Number of Heat-Related Illness Cases in Pingtung",
      xlab = "Year",
-     ylab = "Number of Cases",  # 熱相關疾病人數
+     ylab = "Number of Cases",  
      col = "blue",
      lwd = 2,
      pch = 16,
@@ -186,11 +186,9 @@ plot(oni, type = "o",
      pch = 16,
      xaxt = "n") 
 
-# 每兩年標一次
 at_positions <- seq(1, length(oni), by = 24) 
 years <- seq(1995, 2024, by = 2)
 
-# 畫刻度線（tck 參數控制長度）
 axis(1, at = at_positions, labels = FALSE, tck = -0.02)  
 text(x = at_positions,
      y = par("usr")[3] - 0.05*diff(par("usr")[3:4]),  # 放在軸下方
