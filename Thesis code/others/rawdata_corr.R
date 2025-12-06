@@ -4,27 +4,27 @@ library(zoo)
 library(readxl)
 library(ggplot2)
 library(dplyr)
-library(patchwork)  # 用來排版多圖
+library(patchwork)  
 
-# 讀取資料
-north_temp_data <- read_xlsx("D:/成大/資源所/SPI+HWDI/data/north/all_data_north.xlsx")
-rain_north <- read_excel("D:/成大/資源所/SPI+HWDI/data/north/rain_north.xlsx")
-south_temp_data <- read_xlsx("D:/成大/資源所/SPI+HWDI/data/south/all_data_south.xlsx")
-rain_south <- read_excel("D:/成大/資源所/SPI+HWDI/data/south/rain_south.xlsx")
 
-# 處理北部降雨量
+north_temp_data <- read_xlsx("all_data_north.xlsx")
+rain_north <- read_excel("rain_north.xlsx")
+south_temp_data <- read_xlsx("all_data_south.xlsx")
+rain_south <- read_excel("rain_south.xlsx")
+
+
 rain_north <- rain_north %>% 
   rename(rainfall = precipitation, date = ...4) %>% 
   mutate(date = as.Date(date))
 north_temp_data <- north_temp_data %>%
   mutate(date = as.Date(date))
-# 處理南部降雨量
+
 rain_south <- rain_south %>% 
   rename(rainfall = precipitation, date = ...4) %>% 
   mutate(date = as.Date(date))
 south_temp_data <- south_temp_data %>%
   mutate(date = as.Date(date))
-# 北部折線圖函數
+
 plot_temp <- function(data, title){
   ggplot(data, aes(x = date, y = temperature)) +
     geom_line(color = "red") +
@@ -33,10 +33,10 @@ plot_temp <- function(data, title){
     theme_minimal() +
     theme(
       plot.title = element_text(hjust = 0.5),
-      axis.text.x = element_text(size = 12),   # X 軸字體
-      axis.text.y = element_text(size = 12),   # Y 軸字體
-      axis.title.x = element_text(size = 14),  # X 軸標題
-      axis.title.y = element_text(size = 14)   # Y 軸標題
+      axis.text.x = element_text(size = 12),  
+      axis.text.y = element_text(size = 12),   
+      axis.title.x = element_text(size = 14),  
+      axis.title.y = element_text(size = 14)   
     )
 }
 
@@ -54,11 +54,11 @@ plot_rain <- function(data, title){
       axis.title.y = element_text(size = 14)
     )
 }
-# 北部圖
+
 p1 <- plot_temp(north_temp_data, "(b) Daily max temperature of Keelung")
 p2 <- plot_rain(rain_north, "(a) Monthly Rainfall of Keelung")
 p2/p1
-# 南部圖
+
 p3 <- plot_temp(south_temp_data, "(b) Daily max temperature of Hengchun")
 p4 <- plot_rain(rain_south, "(a) Monthly Rainfall of Hengchun")
 p4/p3
@@ -105,28 +105,28 @@ oni <- c(
   1.78,1.48,1.14,0.71,0.39,0.15,0.04,-0.11,-0.21,-0.26,-0.37,-0.52
 )
 oni_annual <- data.frame(
-  year = 1995:(1995 + (length(oni)/12 - 1)),  # 從 1995 開始，每 12 個月為一年
-  mean_oni = tapply(oni, (seq_along(oni)-1) %/% 12, mean)  # 每 12 個月算平均
+  year = 1995:(1995 + (length(oni)/12 - 1)), 
+  mean_oni = tapply(oni, (seq_along(oni)-1) %/% 12, mean) 
 )
 
 head(oni_annual)
 
 library(Rbeast)
 
-# 篩選 1995~2024
+
 north_temp_data <- north_temp_data %>% filter(format(date, "%Y") >= 1995 & format(date, "%Y") <= 2024)
 rain_north <- rain_north %>% filter(format(date, "%Y") >= 1995 & format(date, "%Y") <= 2024)
 south_temp_data <- south_temp_data %>% filter(format(date, "%Y") >= 1995 & format(date, "%Y") <= 2024)
 rain_south <- rain_south %>% filter(format(date, "%Y") >= 1995 & format(date, "%Y") <= 2024)
 co2_sel <- co2_data %>% filter(year >= 1995 & year <= 2024)
 
-# ===== 轉 ts =====
+
 north_temp_ts <- ts(north_temp_data$temperature, start = c(1995,1), frequency = 365)
 north_rain_ts <- ts(rain_north$rainfall, start = c(1995,1), frequency = 12)
 south_temp_ts <- ts(south_temp_data$temperature, start = c(1995,1), frequency = 365)
 south_rain_ts <- ts(rain_south$rainfall, start = c(1995,1), frequency = 12)
 
-# ===== 北部每日最高溫 =====
+
 cat("\n--- BEAST: Keelung Daily Max Temperature ---\n")
 north_beast_temp <- beast(
   y = north_temp_ts,
@@ -137,7 +137,7 @@ plot(north_beast_temp, main = "(b) BEAST decomposition - Keelung Daily Max Tempe
      vars=c("y","s","scp","t","tcp","slpsgn","error"),
      col = c("black", "red","red","blue","blue","yellow","gray"))
 
-# 抓趨勢並年平均
+
 north_trend_df <- data.frame(
   date = north_temp_data$date,
   trend = north_beast_temp[["trend"]][["Y"]]
@@ -206,29 +206,28 @@ cat("p-value:", north_corr_temp_error_oni_test$p.value, "\n")
 
 
 cat("\n--- Keelung Temperature Seasonal Amplitude ---\n")
-# 取出 season 成分
+
 north_temp_season_df <- data.frame(
   date = north_temp_data$date,
   season = north_beast_temp[["season"]][["Y"]]
 ) %>%
   mutate(year = as.numeric(format(date, "%Y")))
 
-# 每年平均季節成分
 north_temp_season_avg <- north_temp_season_df %>%
   group_by(year) %>%
   summarise(mean_season = mean(season, na.rm = TRUE))
 
-# 計算每筆相對於年度平均的振幅
+
 north_temp_amp_df <- north_temp_season_df %>%
   left_join(north_temp_season_avg, by = "year") %>%
   mutate(amplitude = season - mean_season)
 
-# 年度平均振幅（取絕對值平均）
+
 north_temp_amp_year <- north_temp_amp_df %>%
   group_by(year) %>%
   summarise(mean_amp = mean(abs(amplitude), na.rm = TRUE))
 
-# 和 CO2 進行 Spearman 相關分析
+
 north_temp_corr_amp <- inner_join(north_temp_amp_year, co2_sel, by = "year")
 north_temp_corr_amp_test <- cor.test(north_temp_corr_amp$mean_amp,
                                      north_temp_corr_amp$mean,
@@ -251,22 +250,21 @@ north_temp_season_df <- data.frame(
   mutate(year = year(date),
          month = month(date))
 
-# 每月平均季節成分
+
 north_temp_season_month <- north_temp_season_df %>%
   group_by(year, month) %>%
   summarise(mean_season_month = mean(season, na.rm = TRUE), .groups = "drop")
 
-# 計算每筆相對於月平均的振幅
+
 north_temp_amp_month <- north_temp_season_df %>%
   left_join(north_temp_season_month, by = c("year", "month")) %>%
   mutate(amplitude = season - mean_season_month)
 
-# 月平均振幅（取絕對值平均）
+
 north_temp_amp_month_avg <- north_temp_amp_month %>%
   group_by(year, month) %>%
   summarise(mean_amp_month = mean(abs(amplitude), na.rm = TRUE), .groups = "drop")
 
-# 對 ONI 做 Spearman correlation（ONI 必須是月資料）
 north_temp_corr_amp_oni_month <- cor.test(
   north_temp_amp_month_avg$mean_amp_month,
   oni,
@@ -278,7 +276,7 @@ cat("Temperature amplitude (monthly) - Spearman r with ONI:",
     north_temp_corr_amp_oni_month$estimate, "\n")
 cat("p-value:", north_temp_corr_amp_oni_month$p.value, "\n")
 
-# ===== 北部月降雨量 =====
+
 cat("\n--- BEAST: Keelung Monthly Rainfall ---\n")
 north_beast_rain <- beast(
   y = north_rain_ts,
@@ -370,7 +368,7 @@ north_rain_month <- data.frame(
 ) %>%
   mutate(year = year(date), month = month(date))
 
-# 計算每年的月平均
+
 north_rain_month_avg <- north_rain_month %>%
   group_by(year) %>%
   summarise(mean_season_year = mean(season, na.rm = TRUE), .groups = "drop")
@@ -502,22 +500,20 @@ south_temp_season_df <- data.frame(
   mutate(year = year(date),
          month = month(date))
 
-# 每月平均季節成分
+
 south_temp_season_month <- south_temp_season_df %>%
   group_by(year, month) %>%
   summarise(mean_season_month = mean(season, na.rm = TRUE), .groups = "drop")
 
-# 計算每筆相對於月平均的振幅
+
 south_temp_amp_month <- south_temp_season_df %>%
   left_join(south_temp_season_month, by = c("year", "month")) %>%
   mutate(amplitude = season - mean_season_month)
 
-# 月平均振幅（取絕對值平均）
 south_temp_amp_month_avg <- south_temp_amp_month %>%
   group_by(year, month) %>%
   summarise(mean_amp_month = mean(abs(amplitude), na.rm = TRUE), .groups = "drop")
 
-# 對 ONI 做 Spearman correlation（ONI 必須是月資料）
 south_temp_corr_amp_oni_month <- cor.test(
   south_temp_amp_month_avg$mean_amp_month,
   oni,
@@ -528,7 +524,7 @@ cat("Temperature amplitude (monthly) - Spearman r with ONI:",
     south_temp_corr_amp_oni_month$estimate, "\n")
 cat("p-value:", south_temp_corr_amp_oni_month$p.value, "\n")
 
-# ===== 南部月降雨量 =====
+
 cat("\n--- BEAST: Hengchun Monthly Rainfall ---\n")
 south_beast_rain <- beast(
   y = south_rain_ts,
@@ -614,22 +610,22 @@ cat("Rainfall amplitude - Spearman r:", south_corr_rain_amp_test$estimate, "\n")
 cat("p-value:", south_corr_rain_amp_test$p.value, "\n")
 
 south_rain_month <- data.frame(
-  date = rain_south$date,                # 月資料的日期
-  season = south_beast_rain[["season"]][["Y"]]  # 月資料
+  date = rain_south$date,               
+  season = south_beast_rain[["season"]][["Y"]]  
 ) %>%
   mutate(year = year(date), month = month(date))
 
-# 計算每年的月平均
+
 south_rain_month_avg <- south_rain_month %>%
   group_by(year) %>%
   summarise(mean_season_year = mean(season, na.rm = TRUE), .groups = "drop")
 
-# 計算振幅 = 每月 - 當年平均
+
 south_rain_amp_month <- south_rain_month %>%
   left_join(south_rain_month_avg, by = "year") %>%
   mutate(amplitude_month = season - mean_season_year)
 
-# 跟 ONI correlation
+
 south_corr_rain_amp_oni <- cor.test(
   south_rain_amp_month$amplitude_month,
   oni,
@@ -642,11 +638,7 @@ cat("p-value:", south_corr_rain_amp_oni$p.value, "\n")
 
 ######################################
 
-# ===============================
-# === 南部 (Hengchun) SPI ===
-# ===============================
 
-# --- 趨勢與 CO2 相關 ---
 south_spi_trend_df <- data.frame(
   date = as.Date(as.yearmon(south_beast_result[["time"]])),
   trend = south_beast_result[["trend"]][["Y"]]
@@ -669,7 +661,6 @@ south_spi_corr_trend_oni_test <- cor.test(south_beast_result[["trend"]][["Y"]],
 cat("Spearman r:", south_spi_corr_trend_oni_test$estimate, "\n")
 cat("p-value:", south_spi_corr_trend_oni_test$p.value, "\n")
 
-# --- 週期性振幅與 CO2 相關 ---
 cat("\n--- Seasonal amplitude analysis (Hengchun SPI) ---\n")
 south_spi_season_df <- data.frame(
   date = as.Date(as.yearmon(south_beast_result[["time"]])),
@@ -696,23 +687,23 @@ south_spi_corr_amp_test <- cor.test(south_spi_corr_amp$mean_amp,
 cat("SPI amplitude - Spearman r:", south_spi_corr_amp_test$estimate, "\n")
 cat("p-value:", south_spi_corr_amp_test$p.value, "\n")
 south_spi_season_df <- data.frame(
-  date = as.Date(as.yearmon(south_beast_result[["time"]])),  # 原本就是月資料
+  date = as.Date(as.yearmon(south_beast_result[["time"]])),  
   season = south_beast_result[["season"]][["Y"]]
 ) %>%
   mutate(year = year(date),
          month = month(date))
 
-# 每年平均
+
 south_spi_season_avg <- south_spi_season_df %>%
   group_by(year) %>%
   summarise(mean_season_year = mean(season, na.rm = TRUE), .groups = "drop")
 
-# 計算每月相對於年度平均的振幅
+
 south_spi_amp_month <- south_spi_season_df %>%
   left_join(south_spi_season_avg, by = "year") %>%
   mutate(amplitude_month = season - mean_season_year)
 
-# 和 ONI 做 Spearman correlation（月尺度）
+
 south_spi_corr_amp_oni <- cor.test(
   south_spi_amp_month$amplitude_month,
   oni,
@@ -752,11 +743,7 @@ south_spi_corr_error_oni_test <- cor.test(
 )
 cat("SPI residual - Spearman r:", south_spi_corr_error_oni_test$estimate, "\n")
 cat("p-value:", south_spi_corr_error_oni_test$p.value, "\n")
-# ===============================
-# === 北部 (Keelung) SPI ===
-# ===============================
 
-# --- 趨勢與 CO2 相關 ---
 north_spi_trend_df <- data.frame(
   date = as.Date(as.yearmon(north_beast_result[["time"]])),
   trend = north_beast_result[["trend"]][["Y"]]
@@ -778,7 +765,7 @@ north_spi_corr_trend_oni_test <- cor.test(north_beast_result[["trend"]][["Y"]],
 cat("Spearman r:", north_spi_corr_trend_oni_test$estimate, "\n")
 cat("p-value:", north_spi_corr_trend_oni_test$p.value, "\n")
 
-# --- 週期性振幅與 CO2 相關 ---
+
 cat("\n--- Seasonal amplitude analysis (Keelung SPI) ---\n")
 north_spi_season_df <- data.frame(
   date = as.Date(as.yearmon(north_beast_result[["time"]])),
@@ -805,23 +792,23 @@ north_spi_corr_amp_test <- cor.test(north_spi_corr_amp$mean_amp,
 cat("SPI amplitude - Spearman r:", north_spi_corr_amp_test$estimate, "\n")
 cat("p-value:", north_spi_corr_amp_test$p.value, "\n")
 north_spi_season_df <- data.frame(
-  date = as.Date(as.yearmon(north_beast_result[["time"]])),  # 原本就是月資料
+  date = as.Date(as.yearmon(north_beast_result[["time"]])), 
   season = north_beast_result[["season"]][["Y"]]
 ) %>%
   mutate(year = year(date),
          month = month(date))
 
-# 每年平均
+
 north_spi_season_avg <- north_spi_season_df %>%
   group_by(year) %>%
   summarise(mean_season_year = mean(season, na.rm = TRUE), .groups = "drop")
 
-# 計算每月相對於年度平均的振幅
+
 north_spi_amp_month <- north_spi_season_df %>%
   left_join(north_spi_season_avg, by = "year") %>%
   mutate(amplitude_month = season - mean_season_year)
 
-# 和 ONI 做 Spearman correlation（月尺度）
+
 north_spi_corr_amp_oni <- cor.test(
   north_spi_amp_month$amplitude_month,
   oni,
@@ -861,9 +848,6 @@ north_spi_corr_error_oni_test <- cor.test(
 cat("SPI residual - Spearman r:", north_spi_corr_error_oni_test$estimate, "\n")
 cat("p-value:", north_spi_corr_error_oni_test$p.value, "\n")
 
-# ===============================
-# === 南部 (Hengchun) HWDI ===
-# ===============================
 
 cat("\n--- Seasonal amplitude analysis (Hengchun HWDI) ---\n")
 south_hwdi_season_df <- data.frame(
@@ -872,22 +856,21 @@ south_hwdi_season_df <- data.frame(
 ) %>%
   mutate(year = year(date))
 
-# 每年平均週期
+
 south_hwdi_season_avg <- south_hwdi_season_df %>%
   group_by(year) %>%
   summarise(mean_season = mean(season, na.rm = TRUE))
 
-# 計算振幅（偏離年度平均）
+
 south_hwdi_amp_df <- south_hwdi_season_df %>%
   left_join(south_hwdi_season_avg, by = "year") %>%
   mutate(amplitude = season - mean_season)
 
-# 每年平均振幅（絕對值）
 south_hwdi_amp_year <- south_hwdi_amp_df %>%
   group_by(year) %>%
   summarise(mean_amp = mean(abs(amplitude), na.rm = TRUE))
 
-# 振幅與 CO2 相關
+
 south_hwdi_corr_amp <- inner_join(south_hwdi_amp_year, co2_sel, by = "year")
 south_hwdi_corr_amp_test <- cor.test(south_hwdi_corr_amp$mean_amp,
                                      south_hwdi_corr_amp$mean,
@@ -902,17 +885,17 @@ south_hwdi_season_df <- data.frame(
   mutate(year = year(date),
          month = month(date))
 
-# 每年平均
+
 south_hwdi_season_avg <- south_hwdi_season_df %>%
   group_by(year) %>%
   summarise(mean_season_year = mean(season, na.rm = TRUE), .groups = "drop")
 
-# 計算每月相對於年度平均的振幅
+
 south_hwdi_amp_month <- south_hwdi_season_df %>%
   left_join(south_hwdi_season_avg, by = "year") %>%
   mutate(amplitude_month = season - mean_season_year)
 
-# 與 ONI 做 Spearman correlation（月尺度）
+
 south_hwdi_corr_amp_oni <- cor.test(
   south_hwdi_amp_month$amplitude_month,
   oni,
@@ -976,9 +959,6 @@ south_hwdi_corr_trend_oni_test <- cor.test(beast_south_hwdi_result[["trend"]][["
 cat("HWDI trend - Spearman r:", south_hwdi_corr_trend_oni_test$estimate, "\n")
 cat("p-value:",south_hwdi_corr_trend_oni_test$p.value, "\n")
 
-# ===============================
-# === 北部 (Keelung) HWDI ===
-# ===============================
 
 cat("\n--- Seasonal amplitude analysis (Keelung HWDI) ---\n")
 north_hwdi_season_df <- data.frame(
@@ -1013,17 +993,17 @@ north_hwdi_season_df <- data.frame(
   mutate(year = year(date),
          month = month(date))
 
-# 每年平均
+
 north_hwdi_season_avg <- north_hwdi_season_df %>%
   group_by(year) %>%
   summarise(mean_season_year = mean(season, na.rm = TRUE), .groups = "drop")
 
-# 計算每月相對於年度平均的振幅
+
 north_hwdi_amp_month <- north_hwdi_season_df %>%
   left_join(north_hwdi_season_avg, by = "year") %>%
   mutate(amplitude_month = season - mean_season_year)
 
-# 與 ONI 做 Spearman correlation（月尺度）
+
 north_hwdi_corr_amp_oni <- cor.test(
   north_hwdi_amp_month$amplitude_month,
   oni,
