@@ -1,6 +1,6 @@
 library(ggplot2)
 
-# 建立資料框
+
 co2_data <- data.frame(
   year = 1979:2024,
   mean = c(336.85,338.91,340.11,340.86,342.53,344.07,345.54,346.97,348.68,
@@ -10,7 +10,7 @@ co2_data <- data.frame(
            399.65,403.06,405.22,407.61,410.07,412.44,414.7,417.08,419.36,422.8)
 )
 
-# 繪圖
+
 ggplot(co2_data, aes(x = year, y = mean)) +
   geom_line(color = "red", size = 1.2) +
   labs(
