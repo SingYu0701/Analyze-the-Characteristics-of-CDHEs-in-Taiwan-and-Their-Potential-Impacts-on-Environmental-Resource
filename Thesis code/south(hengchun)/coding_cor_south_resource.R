@@ -3,33 +3,32 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(psych)
-library(scales)# 用來計算 point-biserial correlation
+library(scales)
 
-# 1. 讀取資料
-file_path <- "D:/成大/資源所/SPI+HWDI/data/resource/south_resource.xlsx"
+
+file_path <- "south_resource.xlsx"
 data <- read_excel(file_path)
 
-# 2. 建立事件變數
+
 data <- data %>%
   mutate(
     Event_t  = ifelse(`Compound event` %in% c("Y"), 1, 0),
-    Event_t1 = lag(Event_t, 1) # 前一年事件 t-1
+    Event_t1 = lag(Event_t, 1)
   ) %>%
   arrange(Year)
 
-# 3. 系統名稱
+
 systems <- c("Reservoir", "Rice", "Aquaculture", "Electricity", "Heat-related cases")
 
-# 4. 建立結果資料框
 results <- data.frame(System=character(),
                       Effect=character(),
                       Correlation=numeric(),
                       stringsAsFactors = FALSE)
 
-# 5. 逐組合計算 point-biserial correlation
+
 for(sys in systems){
   
-  # 當年事件 × 當年偏差
+
   idx <- !is.na(data[[paste0(sys, " (%)")]]) & !is.na(data$Event_t)
   r1 <- biserial(data[[paste0(sys, " (%)")]][idx],
                  data$Event_t[idx])
@@ -39,7 +38,7 @@ for(sys in systems){
                               Effect="當年事件 × 當年偏差",
                               Correlation=r1))
   
-  # 前一年事件 × 當年偏差
+
   idx <- !is.na(data[[paste0(sys, " (%)")]]) & !is.na(data$Event_t1)
   r2 <- biserial(data[[paste0(sys, " (%)")]][idx],
                  data$Event_t1[idx])
@@ -49,7 +48,7 @@ for(sys in systems){
                               Effect="前一年事件 × 當年偏差",
                               Correlation=r2))
   
-  # 當年事件 × 年變化
+
   idx <- !is.na(data[[paste0(sys, " vs prev yr (%)")]]) & !is.na(data$Event_t)
   r3 <- biserial(data[[paste0(sys, " vs prev yr (%)")]][idx],
                  data$Event_t[idx])
@@ -59,7 +58,7 @@ for(sys in systems){
                               Effect="當年事件 × 年變化",
                               Correlation=r3))
   
-  # 前一年事件 × 年變化
+
   idx <- !is.na(data[[paste0(sys, " vs prev yr (%)")]]) & !is.na(data$Event_t1)
   r4 <- biserial(data[[paste0(sys, " vs prev yr (%)")]][idx],
                  data$Event_t1[idx])
@@ -70,7 +69,7 @@ for(sys in systems){
                               Correlation=r4))
 }
 
-# 6. 顯示結果
+
 print(results)
 
 results_selected2 <- results %>%
