@@ -8,7 +8,7 @@ library(lubridate)
 library(writexl)
 library(ggplot2)
 library(fitdistrplus)
-rain_north <- read_excel("D:/成大/資源所/SPI+HWDI/data/north/rain_north.xlsx")
+rain_north <- read_excel("rain_north.xlsx")
 descdist(rain_north$precipitation)
 rain_north <- zoo(rain_north$precipitation, order.by = as.yearmon(paste(rain_north$year, rain_north$month), "%Y %m"))
 
@@ -26,7 +26,7 @@ plot(rain_north_beast_result, main="Rain beast decomposition of Keelung",
 
 decimal_to_ym <- function(decimal_years) {
   years <- floor(decimal_years)
-  months <- round((decimal_years - years) * 12) + 1  # +1 因為0表示1月
+  months <- round((decimal_years - years) * 12) + 1  
   paste0(years, "-", sprintf("%02d", months))
 }
 
@@ -83,8 +83,8 @@ north_spi_ts <- ts(north_spi1_values$spi, start = c(1995, 1), frequency = 12)
 set.seed(123)
 north_beast_result <- beast(north_spi_ts,
                             freq = 12,
-                            maxknot = 30,       # 允許較多變化點
-                            numSam = 15000,     # 增加 MCMC 樣本數
+                            maxknot = 30,      
+                            numSam = 15000,     
                             burnin = 3000)
 
 plot(north_beast_result, main="SPI1 beast decomposition of Keelung")
@@ -93,9 +93,9 @@ plot(north_beast_result, main="SPI1 beast decomposition of Keelung",
      col = c("black", "red","red","blue","blue","yellow","gray"))
 decimal_to_ym(north_beast_result$season$cp)
 decimal_to_ym(north_beast_result$trend$cp)
-#write_xlsx(north_spi1_values, path = "D:/成大/資源所/SPI+HWDI/data/north/north_spi1_values.xlsx")
+#write_xlsx(north_spi1_values, path = "north/north_spi1_values.xlsx")
 ####
-temp_north <- read_excel("D:/成大/資源所/SPI+HWDI/data/north/all_data_north.xlsx")
+temp_north <- read_excel("north/all_data_north.xlsx")
 temp_north <- temp_north %>%
   mutate(
     mmdd = format(date, "%m-%d"),
@@ -103,7 +103,7 @@ temp_north <- temp_north %>%
     month = month(date)
   )
 
-# 1. 計算每天的95百分位門檻 (歷年同月合併計算)
+
 thresholds_north <- temp_north %>%
   group_by(mmdd) %>%
   filter(year >= 1995 & year <= 2014) %>%
@@ -115,7 +115,7 @@ temp_north <- temp_north %>%
     exceed = ifelse(is.na(temperature), FALSE, temperature > threshold_95_north)
   )
 
-# 2. 找連續三天以上 exceed = TRUE 的區間，標記熱浪事件
+
 
 temp_north <- temp_north %>%
   mutate(
@@ -125,7 +125,7 @@ temp_north <- temp_north %>%
   )
 temp_north$wave_id <- cumsum(temp_north$new_group)
 
-# 3. 熱浪事件判斷: exceed = TRUE 且長度 >= 3 天的區間視為熱浪事件
+
 events <- temp_north %>%
   filter(exceed_flag == 1) %>%
   group_by(wave_id) %>%
@@ -145,21 +145,21 @@ events_expanded <- events %>%
   mutate(dates = list(seq.Date(start_date, end_date, by = "day"))) %>%
   unnest(cols = c(dates))
 
-# 新增年與月欄位
+
 events_expanded <- events_expanded %>%
   mutate(
     year = year(dates),
     month = month(dates)
   )
 
-# 計算每年每月熱浪持續天數
+
 hwdi_monthly <- events_expanded %>%
   group_by(year, month) %>%
   summarise(hwdi = n(), .groups = "drop") %>%
   arrange(year, month)
 
 
-# 4. 完整月份沒有熱浪事件的補0
+
 all_months_north <- temp_north %>%
   distinct(year, month)
 
@@ -169,7 +169,7 @@ hwdi_full_north <- all_months_north %>%
   arrange(year, month)
 
 hwdi_full_north
-#write_xlsx(hwdi_full_north, path = "D:/成大/資源所/SPI+HWDI/data/north/hwdi_north.xlsx")
+#write_xlsx(hwdi_full_north, path = "north/hwdi_north.xlsx")
 
 hwdi_north_ts <- ts(hwdi_full_north$hwdi, start = c(min(hwdi_full_north$year), min(hwdi_full_north$month)), frequency = 12)
 set.seed(002)
@@ -183,7 +183,7 @@ plot(beast_north_hwdi_result, main="HWDI beast decomposition of Keelung",
 sort(decimal_to_ym(beast_north_hwdi_result$season$cp))
 sort(decimal_to_ym(beast_north_hwdi_result$trend$cp))
 
-library(scales)  # for date formatting if needed
+library(scales)  
 library(ggplot2)
 ggplot(hwdi_full_north, aes(x = factor(month), y = factor(year))) +
   geom_tile(aes(fill = hwdi), color = "grey90", size = 0.4) +
