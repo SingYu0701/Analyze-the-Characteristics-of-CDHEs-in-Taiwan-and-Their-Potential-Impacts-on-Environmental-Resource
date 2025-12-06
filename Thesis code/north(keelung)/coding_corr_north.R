@@ -4,8 +4,8 @@ library(ggplot2)
 library(writexl)
 library(reshape2)
 
-hwdi_north <- read_excel("D:/成大/資源所/SPI+HWDI/data/north/hwdi_north.xlsx")
-north_spi1 <- read_excel("D:/成大/資源所/SPI+HWDI/data/north/north_spi1_values.xlsx")
+hwdi_north <- read_excel("hwdi_north.xlsx")
+north_spi1 <- read_excel("north_spi1_values.xlsx")
 
 
 all_north <- north_spi1 %>%
@@ -26,11 +26,10 @@ a1<-hist(all_north$spi,main = "(a) Histogram of SPI1 Keelung" ,xlab = "SPI1")
 abline(v = -1, col = "red", lwd = 2)
 c1<-hist(all_north$hwdi,main = "(b) Histogram of HWDI Keelung" ,xlab = "HWDI")
 abline(v = 1, col = "red", lwd = 2)
-#write_xlsx(all_north, path = "D:/成大/資源所/SPI+HWDI/data/north/all_north.xlsx")
 
-oni<-read.csv("D:/成大/資源所/SPI+HWDI/data/oni.csv")
-nino<-read.csv("D:/成大/資源所/SPI+HWDI/data/nino3.4.csv")
-wp <- read_excel("D:/成大/資源所/SPI+HWDI/data/wp.xlsx")
+
+oni<-read.csv("oni.csv")
+
 #########################
 
 df_all_north <- north_spi1 %>%
@@ -50,7 +49,7 @@ df_all_north <- df_all_north %>%
     oni = as.numeric(oni)
   )
 
-# 2. 計算三變數間的Pearson相關係數矩陣
+
 cor_north <- cor(
   df_all_north[, c("spi", "hwdi", "oni")],
   method = "pearson",
@@ -59,11 +58,10 @@ cor_north <- cor(
 print(cor_north)
 cor_melt <- melt(cor_north)
 
-# 🔹 把變數名稱轉為大寫（軸標就會是大寫）
 cor_melt$Var1 <- factor(toupper(cor_melt$Var1), levels = c("SPI", "HWDI", "ONI"))
 cor_melt$Var2 <- factor(toupper(cor_melt$Var2), levels = c("SPI", "HWDI", "ONI"))
 
-# 繪圖
+
 ggplot(cor_melt, aes(x = Var1, y = Var2, fill = value)) +
   geom_tile(color = "white") +
   scale_fill_gradient2( low = "green", 
@@ -79,7 +77,7 @@ ggplot(cor_melt, aes(x = Var1, y = Var2, fill = value)) +
   labs(title = "(a) Correlation Heatmap (Keelung)",
        x = NULL, y = NULL)
 
-#low = "#0033A0",   # 深藍
+#low = "#0033A0", 
 #mid = "white",
 #high = "#8B0000",
 
@@ -144,51 +142,8 @@ calc_lag_corr_plot <- function(x, y, max_lag = 24, method = "spearman", title = 
 }
 north_oni_hwdi_lag_df <- calc_lag_corr_plot(df_all_north$oni, df_all_north$hwdi, max_lag = 6,  title = "(a) ONI leads HWDI lag correlation of Keelung", show_legend = FALSE)
 
-  north_oni_spi_lag_df <- calc_lag_corr_plot(df_all_north$oni, df_all_north$spi, max_lag = 6, title = "(c) ONI leads SPI lag correlation of Keelung", show_legend = FALSE)
+north_oni_spi_lag_df <- calc_lag_corr_plot(df_all_north$oni, df_all_north$spi, max_lag = 6, title = "(c) ONI leads SPI lag correlation of Keelung", show_legend = FALSE)
 
 north_spi_hwdi_lag_df <- calc_lag_corr_plot(df_all_north$spi, df_all_north$hwdi, max_lag = 6, title = "(e) SPI leads HWDI lag correlation of Keelung", show_legend = FALSE)
 
-
-
-####
-
-extreme_north <- df_all_north %>%
-  filter(hwdi > 0, spi <= -1)
-
-# 篩選後計算 Spearman 相關係數（只針對極端事件）
-cor_extreme_north <- cor(
-  extreme_north[, c("spi", "hwdi", "oni")],
-  method = "spearman",
-  use = "complete.obs"
-)
-print(cor_extreme_north)
-cor_extreme_north <- melt(cor_extreme_north)
-# 繪圖
-ggplot(cor_extreme_north, aes(x = Var1, y = Var2, fill = value)) +
-  geom_tile(color = "white") +
-  scale_fill_gradient2(low = "blue", mid = "white", high = "red", 
-                       midpoint = 0, limit = c(-1, 1), space = "Lab",
-                       name = "Spearman\nCorrelation") +
-  geom_text(aes(label = round(value, 3)), color = "black", size = 5) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  labs(title = "Compound event correlation Heatmap (Keelung)",
-       x = NULL, y = NULL)
-#write.csv(extreme_north, "D:/成大/資源所/SPI+HWDI/data/plot/extreme_north.csv", row.names = FALSE)
-
-#################
-# 4. 交叉相關函數 (CCF) 分析：找出 lag
-
-# ONI 與 HWDI
-ccf_result1<-ccf(df_all_north$oni, df_all_north$hwdi, lag.max = 6, main = "ONI and HWDI of Keelung")
-ccf_result1$lag[which.max(abs(ccf_result1$acf))]
-ccf_result1$acf[which.max(abs(ccf_result1$acf))]
-# ONI 與 SPI
-ccf_result2<-ccf(df_all_north$oni, df_all_north$spi, lag.max =6, main = "ONI and SPI of Keelung")
-ccf_result2$lag[which.max(abs(ccf_result2$acf))]
-ccf_result2$acf[which.max(abs(ccf_result2$acf))]
-# SPI 與 HWDI
-ccf_result3<-ccf(df_all_north$spi, df_all_north$hwdi, lag.max = 6, main = "SPI and HWDI of Keelung")
-ccf_result3$lag[which.max(abs(ccf_result3$acf))]
-ccf_result3$acf[which.max(abs(ccf_result3$acf))]
 
