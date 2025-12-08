@@ -128,6 +128,7 @@ BEAST detects significant turning points in both stations
 ![fig7](https://github.com/user-attachments/assets/1426ca6f-fcf4-4531-b512-0013cd4f9a8b)
 
 </div>
+
 **2. Compound Events Becoming More Frequent**
 
 CDHE occurrences increase especially after 2010
