@@ -123,7 +123,9 @@ HWDI is defined as the number of days within a month that belong to heatwave eve
 $$HWDI = ∑_{i=1}^{n} d_i (T_{max,i} > T_{95}),  \text{for }  d ≥ 3$$
 
 <div align="center"> 
+  
 ![fig4-1](https://github.com/user-attachments/assets/0f89b4ab-fbe0-4a66-a882-4b15e3edf77f)
+
 </div>
 
 ### 3.2 Bayesian Change‑Point Detection (BEAST)
