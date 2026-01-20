@@ -134,7 +134,7 @@ The Bayesian Estimator of Abrupt Change, Seasonal Change, and Trend (BEAST) is a
 
 - Piecewise linear trend components
 - Seasonal harmonic signals
-- Residual errors
+- Random errors
 
 Under the Bayesian paradigm, both the number and locations of change points are treated as unknown random variables. Prior distributions are assigned to model parameters, including trend slopes, seasonal amplitudes, and change-point configurations, allowing structural complexity to be inferred directly from the data rather than specified a priori. Posterior distributions are then estimated via Markov Chain Monte Carlo (MCMC) sampling, providing probabilistic inference on the timing and significance of structural changes.
 
