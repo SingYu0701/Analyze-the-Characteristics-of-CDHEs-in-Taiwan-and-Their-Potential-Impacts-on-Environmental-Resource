@@ -3,6 +3,8 @@
 
 **Bao, S.-Y. (2026). *Analysis of compound drought and heatwave events in Taiwan and their potential impacts on environmental resources* (Master’s thesis, National Cheng Kung University, supervised by Kuo-Chin Hsu).**
 
+**Research abstract accepted for JpGU–AGU Joint Meeting 2026 (oral presentation); manuscript submitted to Climate Services (Q1, under review)**
+
 ![Made with R](https://img.shields.io/badge/Made%20with-R-276DC3?logo=r&logoColor=white)
 
 ## Overview
